@@ -26,15 +26,17 @@ $app->get("/", function (Request $request, Response $response) {
 $app->get("/test", function (Request $request, Response $response) {
     global $loadbalancer;
 
-    $result = $loadbalancer->pickServer();
-
-    return $response->withStatus(200)->write(json_encode($result));
+    return $response->withStatus(200)->write('Testing');
 });
 
 $app->get('/games', function (Request $request, Response $response, array $args) {
     global $loadbalancer;
 
     $result = $loadbalancer->getGames();
+
+    if (!$result) {
+        return $response->withStatus(500)->write("Servers are offline");
+    }
 
     return $response->withStatus(200)->write($result);
 });
@@ -45,6 +47,10 @@ $app->get('/games/{id}', function (Request $request, Response $response, array $
     $id = $args['id'];
 
     $result = $loadbalancer->getGame($id);
+
+    if (!$result) {
+        return $response->withStatus(500)->write("Servers are offline");
+    }
 
     return $response->withStatus(200)->write($result);
 });

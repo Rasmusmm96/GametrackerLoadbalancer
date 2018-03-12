@@ -20,13 +20,41 @@ class LoadBalancer {
     public function getGames() {
         global $dataaccess;
 
-        return $dataaccess->getGames();
+        $server = $this->pickServer();
+
+        if (!$server)
+            return false;
+
+        $result = $dataaccess->getGames($server);
+
+        if (!$result) {
+            $dataaccess->setServerOffline($server);
+            return $this->getGames();
+        }
+
+        return $dataaccess->getGames($server);
     }
 
     public function getGame($id) {
         global $dataaccess;
 
-        return $dataaccess->getGame($id);
+        $server = $this->pickServer();
+
+        if (!$server)
+            return false;
+
+        $result = $dataaccess->getGame($id, $server);
+
+        if (!$result) {
+            $dataaccess->setServerOffline($server);
+            return $this->getGame($id);
+        }
+
+        if ($result == 'null')
+            return 'No game with that ID';
+        else {
+            return $result;
+        }
     }
 
     private function getOnlineServers() {
@@ -35,13 +63,13 @@ class LoadBalancer {
         return $dataaccess->getOnlineServers();
     }
 
-    public function pickServer() {
+    private function pickServer() {
         global $shm_resource;
 
         $servers = $this->getOnlineServers();
 
         if (!$servers) {
-            return "Servers are offline";
+            return false;
         }
 
         if (!shm_has_var($shm_resource, 1)) {
@@ -59,7 +87,6 @@ class LoadBalancer {
 
         shm_put_var($shm_resource, 1, $nextServer);
         return $servers[$nextServer]['Server'];
-
     }
 
 }

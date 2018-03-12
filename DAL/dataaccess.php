@@ -12,14 +12,22 @@ class DataAccess {
         return $con;
     }
 
-    public function getGames() {
-        $json = file_get_contents('http://localhost:8888/GametrackerPublicBackend/api.php/games');
-        return $json;
+    public function getGames($server) {
+        $json = @file_get_contents('http://'. $server .'/GametrackerPublicBackend/api.php/games');
+        if ($json === FALSE) {
+            return false;
+        } else {
+            return $json;
+        }
     }
 
-    public function getGame($id) {
-        $json = file_get_contents('http://localhost:8888/GametrackerPublicBackend/api.php/games/' . $id);
-        return $json;
+    public function getGame($id, $server) {
+        $json = @file_get_contents('http://'. $server .'/GametrackerPublicBackend/api.php/games/' . $id);
+        if ($json === FALSE) {
+            return false;
+        } else {
+            return $json;
+        }
     }
 
     public function getOnlineServers() {
@@ -35,6 +43,22 @@ class DataAccess {
                 $myResult[] = $row;
             }
             return $myResult;
+        } else {
+            return false;
+        }
+    }
+
+    public function setServerOffline($server) {
+        $db = $this->getDatabase();
+
+        $statement = 'UPDATE Servers SET Online = 0 WHERE Server = "' . $server . '"';
+
+        echo $statement;
+
+        $db->query($statement);
+
+        if ($db->affected_rows == 1) {
+            return true;
         } else {
             return false;
         }
